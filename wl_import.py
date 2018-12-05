@@ -28,24 +28,27 @@ class ImportProcessor(InlineProcessor):
 class HTMLBodyParser(HTMLParser):
     def __init__(self):
         super(HTMLBodyParser, self).__init__()
-        self.document = ""
+        self.document = etree.Element("div")
+        # When we encounter a start tag we push to the stack, an end tag pulls
+        # in this way we can properly mirror the HTML structure
+        self._tag_stack = []
+        self._tag_stack.append(self.document)
         self._in_body = False
         
     def handle_starttag(self, tag, attrs):
         if tag == "body":
             self._in_body = True
         elif self._in_body:
-            attributes = ' '.join(
-                ["{}=\"{}\"".format(attr[0],attr[1]) for attr in attrs]
-            )
-            self.document += "<{} {}>".format(tag, attributes)
+            new_tag = etree.SubElement(self._tag_stack[-1],tag)
+            self._tag_stack.append(new_tag)
+            
 
     def handle_data(self, data):
         if self._in_body:
-            self.document += data
+            self._tag_stack[-1].text = data
 
     def handle_endtag(self, tag):
         if tag == "body":
             self._in_body = False
         elif self._in_body:
-            self.document += "</{}>".format(tag)
+            self._tag_stack.pop()
