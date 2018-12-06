@@ -26,13 +26,18 @@ class ImportProcessor(InlineProcessor):
             return parser.document, match.start(), match.end()
 
 class HTMLBodyParser(HTMLParser):
-    def __init__(self):
+    def __init__(self,attribute_whitelist=[]):
         super(HTMLBodyParser, self).__init__()
         self.document = etree.Element("div")
         # When we encounter a start tag we push to the stack, an end tag pulls
         # in this way we can properly mirror the HTML structure
         self._tag_stack = []
         self._tag_stack.append(self.document)
+        # Attribute whitelist helps block malicious junk in imports
+        if attribute_whitelist:
+            self._attribute_whitelist = attribute_whitelist
+        else:
+            self._attribute_whitelist = ["href", "src"]
         self._in_body = False
         
     def handle_starttag(self, tag, attrs):
@@ -40,6 +45,9 @@ class HTMLBodyParser(HTMLParser):
             self._in_body = True
         elif self._in_body:
             new_tag = etree.SubElement(self._tag_stack[-1],tag)
+            for attribute in attrs:
+                if attribute[0] in self._attribute_whitelist:
+                    new_tag.set(attribute[0], attribute[1])
             self._tag_stack.append(new_tag)
             
 
