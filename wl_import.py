@@ -3,6 +3,8 @@ from markdown.inlinepatterns import InlineProcessor
 from markdown.util import etree
 from urllib import request
 from html.parser import HTMLParser
+import csv
+import pdb
 
 import_pattern = r'\{import +([A-Za-z1-9_]+) (.*:\/\/.*) ?\}'
 
@@ -21,9 +23,23 @@ class ImportProcessor(InlineProcessor):
         if import_type == "html":
             source = request.urlopen(url)
             parser = HTMLBodyParser()
+            #TODO: Handle non-UTF-8
             parser.feed(source.read().decode("UTF-8"))
             source.close()
             return parser.document, match.start(), match.end()
+        if import_type == "csv":
+            #TODO: Handle non-UTF-8
+            source = request.urlopen(url)
+            csv_text = source.read().decode("UTF-8")
+            table = etree.Element("table")
+            for row in csv.reader(csv_text.splitlines()):
+                table_row = etree.SubElement(table, "tr")
+                for data in row:
+                    td = etree.SubElement(table_row, "td")
+                    td.text = data
+            source.close()
+            return table, match.start(), match.end()
+                
 
 class HTMLBodyParser(HTMLParser):
     def __init__(self,attribute_whitelist=[]):
