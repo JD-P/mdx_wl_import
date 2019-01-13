@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 import csv
 import pdb
 
-import_pattern = r'\{import +([A-Za-z1-9_]+) (.*:\/\/.*) ?\}'
+import_pattern = r'\{include +([A-Za-z1-9_]+) (.*:\/\/.*) ?\}'
 
 class WhistlingLobstersImport(Extension):
     def extendMarkdown(self, md, unknown):
