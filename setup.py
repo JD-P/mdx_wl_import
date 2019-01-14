@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="mdx-wl-import",
     version="0.2",
+    packages=find_packages(),
     install_requires=['Markdown>=2.6.11'],
     author="John David Pressman",
     author_email="jd@jdpressman.com",
