@@ -3,6 +3,7 @@ from markdown.inlinepatterns import InlineProcessor
 from markdown.util import etree
 from urllib import request
 from html.parser import HTMLParser
+from readability import Document
 import csv
 import pdb
 
@@ -20,11 +21,21 @@ class ImportProcessor(InlineProcessor):
         """Find a import statement in the text, if it's there we extract the
         import type and its associated URL."""
         import_type, url = match.group(1,2)
+        #TODO: Refactor this to use methods instead of long
+        # if conditional
         if import_type == "html":
             source = request.urlopen(url)
             parser = HTMLBodyParser()
             #TODO: Handle non-UTF-8
             parser.feed(source.read().decode("UTF-8"))
+            source.close()
+            return parser.document, match.start(), match.end()
+        if import_type == "html_s":
+            source = request.urlopen(url)
+            #TODO: Handle non-UTF-8
+            source_document = Document(source.read().decode("UTF-8"))
+            parser = HTMLBodyParser()
+            parser.feed(source_document.summary())
             source.close()
             return parser.document, match.start(), match.end()
         if import_type == "csv":
